@@ -96,7 +96,7 @@
 </head>
 <body>
     <!-- Specify a unique data-storage-key for each button -->
-    <div class="button-container" data-storage-key="week1" onclick="toggleCheckbox(this)">
+    <div class="button-container" data-storage-key="week2" onclick="toggleCheckbox(this)">
         <div class="checkbox-container">
             <div class="checkbox" id="myCheckbox"></div>
         </div>
