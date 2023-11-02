@@ -96,7 +96,7 @@
 </head>
 <body>
     <!-- Specify a unique data-storage-key for each button -->
-    <div class="button-container" data-storage-key="week1" onclick="toggleCheckbox(this)">
+    <div class="button-container" data-storage-key="DDw1" onclick="toggleCheckbox(this)">
         <div class="checkbox-container">
             <div class="checkbox" id="myCheckbox"></div>
         </div>
@@ -106,12 +106,21 @@
 
     <!-- Add more buttons with different data-storage-key values for other pages -->
 
+    <!-- Audio Player (without controls) -->
+    <audio id="myAudio">
+        <source src="https://lokumsd.github.io/audiofiles/Buttonchime.wav" type="audio/wav">
+        Your browser does not support the audio element.
+    </audio>
+
     <script>
-        // Function to toggle checkbox
+        // Function to toggle checkbox and show/hide audio player
         function toggleCheckbox(container) {
             const storageKey = container.getAttribute("data-storage-key");
             const checkbox = container.querySelector(".checkbox");
             const checkboxLabel = container.querySelector(".checkbox-label");
+
+            // Get the audio element by its id
+            const audio = document.getElementById("myAudio");
 
             if (checkbox.classList.contains("checked")) {
                 checkbox.classList.remove("checked");
@@ -120,6 +129,8 @@
                 container.classList.remove("checked");
                 // Remove the button state from localStorage
                 localStorage.removeItem(storageKey);
+                // Pause the audio
+                audio.pause();
             } else {
                 checkbox.classList.add("checked");
                 container.style.backgroundColor = "#63DB5A"; /* Your desired RGB value (99, 219, 90) */
@@ -127,12 +138,14 @@
                 container.classList.add("checked");
                 // Store the button state in localStorage
                 localStorage.setItem(storageKey, "checked");
+                // Play the audio
+                audio.play();
                 // Add 4 slower sparkles
                 addSparkles(container.querySelector(".sparkles"), 4); // Adjust the number of sparkles as needed
             }
         }
 
-        // Function to add sparkles
+        // Function to add sparkles (your existing JavaScript code here)
         function addSparkles(container, numSparkles) {
             for (let i = 0; i < numSparkles; i++) {
                 const sparkle = document.createElement("div");
@@ -144,7 +157,7 @@
             }
         }
 
-        // Restore checkbox state on page load
+        // Restore checkbox state on page load (your existing JavaScript code here)
         document.addEventListener("DOMContentLoaded", function () {
             const buttons = document.querySelectorAll(".button-container");
             buttons.forEach(function (button) {
