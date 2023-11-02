@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    .button-container {
+        display: inline-block;
+        background-color: #dddddd; /* Light grey color */
+        padding: 10px;
+        border-radius: 25px; /* Rounded corners */
+        cursor: pointer;
+        user-select: none;
+        text-align: center;
+        vertical-align: middle; /* Added to vertically align the button content */
+        transition: background-color 0.5s ease; /* Smooth transition effect */
+        position: absolute; /* Position it absolutely */
+        left: 20px; /* 20 pixels away from the right */
+        top: 30px; /* Raised by 30 pixels */
+    }
+
+    .checkbox-container {
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .checkbox {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        vertical-align: middle;
+        margin-right: 10px;
+        position: relative;
+        background-color: white; /* Initial background color for the checkbox */
+    }
+
+    .checkbox.checked:after {
+        content: "✔"; /* Checkmark Unicode character */
+        font-size: 18px;
+        position: absolute;
+        top: 50%; /* Adjusted vertical alignment */
+        left: 50%; /* Adjusted horizontal alignment */
+        transform: translate(-50%, -50%);
+        color: #63DB5A; /* Your desired RGB value (99, 219, 90) */
+    }
+
+    .checkbox-label {
+        display: inline-block;
+        vertical-align: middle;
+        line-height: 24px; /* Adjust as needed */
+        color: black; /* Text color before it's checked */
+        font-weight: 600; /* Slightly less bold */
+    }
+
+    .sparkles {
+        position: absolute;
+        top: -10px; /* Adjusted top position to prevent cutoff */
+        left: -10px; /* Adjusted left position to prevent cutoff */
+        width: calc(100% + 20px); /* Adjusted width to prevent cutoff */
+        height: calc(100% + 20px); /* Adjusted height to prevent cutoff */
+        overflow: visible; /* Changed overflow property to visible */
+        pointer-events: none;
+    }
+
+    .sparkle {
+        position: absolute;
+        font-size: 24px;
+        opacity: 0;
+        animation: sparkle 1.6s linear; /* Slower sparkle animation */
+        pointer-events: none;
+        margin: 10px; /* Increase spacing between sparkles */
+    }
+
+    @keyframes sparkle {
+        0% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-100px) scale(0.5);
+            opacity: 0;
+        }
+    }
+
+    .button-container.checked {
+        background-color: #63DB5A; /* Your desired RGB value (99, 219, 90) */
+    }
+
+    .button-container.checked .checkbox-label {
+        color: white; /* Text color when checked */
+    }
+</style>
+</head>
+<body>
+    <!-- Specify a unique data-storage-key for each button -->
+    <div class="button-container" data-storage-key="DDw5" onclick="toggleCheckbox(this)">
+        <div class="checkbox-container">
+            <div class="checkbox" id="myCheckbox"></div>
+        </div>
+        <span class="checkbox-label">Mark as Done</span>
+        <div class="sparkles"></div>
+    </div>
+
+    <!-- Add more buttons with different data-storage-key values for other pages -->
+
+    <!-- Audio Player (without controls) -->
+    <audio id="myAudio">
+        <source src="https://lokumsd.github.io/audiofiles/Buttonchime.wav" type="audio/wav">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        // Function to toggle checkbox and show/hide audio player
+        function toggleCheckbox(container) {
+            const storageKey = container.getAttribute("data-storage-key");
+            const checkbox = container.querySelector(".checkbox");
+            const checkboxLabel = container.querySelector(".checkbox-label");
+
+            // Get the audio element by its id
+            const audio = document.getElementById("myAudio");
+
+            if (checkbox.classList.contains("checked")) {
+                checkbox.classList.remove("checked");
+                container.style.backgroundColor = "#dddddd"; /* Light grey color */
+                checkboxLabel.textContent = "Mark as Done";
+                container.classList.remove("checked");
+                // Remove the button state from localStorage
+                localStorage.removeItem(storageKey);
+                // Pause the audio
+                audio.pause();
+            } else {
+                checkbox.classList.add("checked");
+                container.style.backgroundColor = "#63DB5A"; /* Your desired RGB value (99, 219, 90) */
+                checkboxLabel.textContent = "Done";
+                container.classList.add("checked");
+                // Store the button state in localStorage
+                localStorage.setItem(storageKey, "checked");
+                // Play the audio
+                audio.play();
+                // Add 4 slower sparkles
+                addSparkles(container.querySelector(".sparkles"), 4); // Adjust the number of sparkles as needed
+            }
+        }
+
+        // Function to add sparkles (your existing JavaScript code here)
+        function addSparkles(container, numSparkles) {
+            for (let i = 0; i < numSparkles; i++) {
+                const sparkle = document.createElement("div");
+                sparkle.className = "sparkle";
+                sparkle.style.left = `${Math.random() * 100}%`;
+                sparkle.style.animationDuration = `${Math.random() * 0.5 + 1}s`; // Slower sparkle animation
+                sparkle.innerHTML = "&#10024;"; // ✨ Unicode character
+                container.appendChild(sparkle);
+            }
+        }
+
+        // Restore checkbox state on page load (your existing JavaScript code here)
+        document.addEventListener("DOMContentLoaded", function () {
+            const buttons = document.querySelectorAll(".button-container");
+            buttons.forEach(function (button) {
+                const storageKey = button.getAttribute("data-storage-key");
+                const checkbox = button.querySelector(".checkbox");
+                const checkboxLabel = button.querySelector(".checkbox-label");
+
+                const buttonState = localStorage.getItem(storageKey);
+                if (buttonState === "checked") {
+                    checkbox.classList.add("checked");
+                    button.style.backgroundColor = "#63DB5A"; /* Your desired RGB value (99, 219, 90) */
+                    checkboxLabel.textContent = "Done";
+                    button.classList.add("checked");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
