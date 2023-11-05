@@ -61,6 +61,9 @@
                 var polygon = event.target;
                 var isActive = polygon.isActive;
                 polygon.isActive = !isActive;
+                
+                 // Store the state of the country in localStorage
+                localStorage.setItem(polygon.dataItem.dataContext.id, isActive ? "active" : "inactive");
             }
 
             // Add a click event listener to handle country clicks
@@ -89,6 +92,16 @@
             // Make stuff animate on load
             chart.appear(1000, 100);
         });
+        
+         polygonSeries.mapPolygons.each(function(polygon) {
+                var id = polygon.dataItem.dataContext.id;
+                var state = localStorage.getItem(id);
+                if (state === "active") {
+                    polygon.isActive = true;
+                }
+            });
     </script>
+    
+    
 </body>
 </html>
