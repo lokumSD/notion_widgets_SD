@@ -16,6 +16,7 @@
     <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
     <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
     <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"></script>
 </head>
 <body>
     <div id="chartdiv"></div>
@@ -45,15 +46,15 @@
                 tooltipText: "{name}",
                 toggleKey: "active",
                 interactive: true,
-                fill: am5.color("#FFD6E6"), // Set the default fill color to #FFD6E6
+                fill: am5.color("#FFD6E6"),
             });
 
             polygonSeries.mapPolygons.template.states.create("hover", {
-                fill: am5.color("#DEB4C6") // Set the highlight (hover) color to #DEB4C6
+                fill: am5.color("#DEB4C6")
             });
 
             polygonSeries.mapPolygons.template.states.create("active", {
-                fill: am5.color("#B9CCB1") // Set the click (active) color to #B9CCB1
+                fill: am5.color("#B9CCB1")
             });
 
             // Function to handle when a country is clicked
@@ -61,13 +62,26 @@
                 var polygon = event.target;
                 var isActive = polygon.isActive;
                 polygon.isActive = !isActive;
-
-                // Update URL parameters to save the state of the country
-                updateURLParameters(polygon.dataItem.dataContext.id, polygon.isActive);
+                // Save the active state to a cookie
+                saveToCookie(polygon.dataItem.dataContext.id, polygon.isActive);
             }
 
-            // Add a click event listener to handle country clicks
-            polygonSeries.mapPolygons.events.on("hit", handleCountryClick);
+            // Function to save data to a cookie
+            function saveToCookie(key, value) {
+                Cookies.set(key, value);
+            }
+
+            // Function to load data from cookies and set the active state
+            function loadFromCookies() {
+                polygonSeries.mapPolygons.each(function (polygon) {
+                    var key = polygon.dataItem.dataContext.id;
+                    var isActive = Cookies.get(key) === "true";
+                    polygon.isActive = isActive;
+                });
+            }
+
+            // Load active state from cookies when the page loads
+            loadFromCookies();
 
             // Set clicking on "water" to zoom out
             chart.chartContainer.get("background").events.on("click", function () {
@@ -91,29 +105,7 @@
 
             // Make stuff animate on load
             chart.appear(1000, 100);
-
-            // After initializing, check and restore the states from URL parameters
-            var urlParams = new URLSearchParams(window.location.search);
-            polygonSeries.mapPolygons.each(function(polygon) {
-                var id = polygon.dataItem.dataContext.id;
-                var state = urlParams.get(id);
-                if (state === "active") {
-                    polygon.isActive = true;
-                }
-            });
         });
-
-        // Function to update URL parameters with country states
-        function updateURLParameters(countryId, isActive) {
-            var urlParams = new URLSearchParams(window.location.search);
-            if (isActive) {
-                urlParams.set(countryId, "active");
-            } else {
-                urlParams.delete(countryId);
-            }
-            history.replaceState(null, null, "?" + urlParams.toString());
-        }
     </script>
 </body>
 </html>
-
