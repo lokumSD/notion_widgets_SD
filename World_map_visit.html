@@ -62,8 +62,8 @@
                 var isActive = polygon.isActive;
                 polygon.isActive = !isActive;
 
-                // Store the active state in localStorage
-                localStorage.setItem("country_" + polygon.dataItem.id, polygon.isActive);
+                // Store the active state in a cookie
+                setCookie("country_" + polygon.dataItem.id, polygon.isActive);
             }
 
             // Add a click event listener to handle country clicks
@@ -92,13 +92,40 @@
             // Make stuff animate on load
             chart.appear(1000, 100);
 
-            // Retrieve and set the active state of countries from localStorage
+            // Retrieve and set the active state of countries from cookies
             polygonSeries.mapPolygons.each(function (polygon) {
-                var isActive = localStorage.getItem("country_" + polygon.dataItem.id);
+                var isActive = getCookie("country_" + polygon.dataItem.id);
                 if (isActive === "true") {
                     polygon.isActive = true;
                 }
             });
+
+            // Function to set a cookie
+            function setCookie(name, value, days) {
+                var expires = "";
+                if (days) {
+                    var date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + value + expires + "; path=/";
+            }
+
+            // Function to get a cookie
+            function getCookie(name) {
+                var nameEQ = name + "=";
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i];
+                    while (cookie.charAt(0) === ' ') {
+                        cookie = cookie.substring(1, cookie.length);
+                    }
+                    if (cookie.indexOf(nameEQ) === 0) {
+                        return cookie.substring(nameEQ.length, cookie.length);
+                    }
+                }
+                return null;
+            }
         });
     </script>
 </body>
