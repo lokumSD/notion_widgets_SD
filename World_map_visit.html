@@ -16,7 +16,6 @@
     <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
     <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
     <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/3.0.1/js.cookie.min.js"></script>
 </head>
 <body>
     <div id="chartdiv"></div>
@@ -62,26 +61,13 @@
                 var polygon = event.target;
                 var isActive = polygon.isActive;
                 polygon.isActive = !isActive;
-                // Save the active state to a cookie
-                saveToCookie(polygon.dataItem.dataContext.id, polygon.isActive);
+
+                // Store the active state in localStorage
+                localStorage.setItem("country_" + polygon.dataItem.id, polygon.isActive);
             }
 
-            // Function to save data to a cookie
-            function saveToCookie(key, value) {
-                Cookies.set(key, value);
-            }
-
-            // Function to load data from cookies and set the active state
-            function loadFromCookies() {
-                polygonSeries.mapPolygons.each(function (polygon) {
-                    var key = polygon.dataItem.dataContext.id;
-                    var isActive = Cookies.get(key) === "true";
-                    polygon.isActive = isActive;
-                });
-            }
-
-            // Load active state from cookies when the page loads
-            loadFromCookies();
+            // Add a click event listener to handle country clicks
+            polygonSeries.mapPolygons.events.on("hit", handleCountryClick);
 
             // Set clicking on "water" to zoom out
             chart.chartContainer.get("background").events.on("click", function () {
@@ -105,6 +91,14 @@
 
             // Make stuff animate on load
             chart.appear(1000, 100);
+
+            // Retrieve and set the active state of countries from localStorage
+            polygonSeries.mapPolygons.each(function (polygon) {
+                var isActive = localStorage.getItem("country_" + polygon.dataItem.id);
+                if (isActive === "true") {
+                    polygon.isActive = true;
+                }
+            });
         });
     </script>
 </body>
