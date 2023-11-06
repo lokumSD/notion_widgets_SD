@@ -19,9 +19,7 @@
 <body>
     <div id="chartdiv"></div>
     <script>
-        // Global state object to store active country data
-        var countryState = {};
-
+    
         am5.ready(function () {
             var root = am5.Root.new("chartdiv");
 
@@ -63,9 +61,6 @@
                 var polygon = event.target;
                 var isActive = polygon.isActive;
                 polygon.isActive = !isActive;
-
-                // Update the global state object
-                countryState[polygon.dataItem.id] = polygon.isActive;
             }
 
             // Add a click event listener to handle country clicks
