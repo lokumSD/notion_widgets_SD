@@ -53,11 +53,11 @@
       // Function to handle when a country is clicked
       function handleCountryClick(event) {
         var polygon = event.target;
-        var countryId = polygon.dataItem.dataContext.id;
-        var isActive = localStorage.getItem("active-country-" + countryId) === 'true';
-        polygon.set("fill", isActive ? defaultColor : activeColor);
-        localStorage.setItem("active-country-" + countryId, !isActive);
-        console.log("Country clicked:", countryId, "isActive:", !isActive);
+        var countryId = polygon.dataItem.dataContext.id; // Use country ID from data context
+        var isActive = !(localStorage.getItem("active-country-" + countryId) === 'true'); // Correctly toggle the state
+        polygon.set("fill", isActive ? activeColor : defaultColor); // Apply the correct color based on the new state
+        localStorage.setItem("active-country-" + countryId, isActive); // Store the new state
+        console.log("Country clicked:", countryId, "isActive now set to:", isActive);
       }
 
       // Add a click event listener to handle country clicks
@@ -68,12 +68,32 @@
         polygonSeries.mapPolygons.each(function(polygon) {
           var countryId = polygon.dataItem.dataContext.id;
           var isActive = localStorage.getItem("active-country-" + countryId) === 'true';
-          polygon.set("fill", isActive ? activeColor : defaultColor);
+          polygon.set("fill", isActive ? activeColor : defaultColor); // Apply the correct color based on the stored state
           console.log("Loaded active state for country ID", countryId, "isActive:", isActive);
         });
       });
 
-      // ... (the rest of your code for setting up the map)
+      // Set clicking on "water" to zoom out
+      chart.chartContainer.get("background").events.on("click", function() {
+        chart.goHome();
+      });
+
+      // Add zoom control
+      var zoomControl = chart.set("zoomControl", am5map.ZoomControl.new(root, {}));
+      var homeButton = zoomControl.children.moveValue(am5.Button.new(root, {
+        paddingTop: 10,
+        paddingBottom: 10,
+        icon: am5.Graphics.new(root, {
+          svgPath: "M16,8 L14,8 L14,16 L10,16 L10,10 L6,10 L6,16 L2,16 L2,8 L0,8 L8,0 L16,8 Z M16,8",
+          fill: am5.color(0xffffff)
+        })
+      }), 0);
+      homeButton.events.on("click", function() {
+        chart.goHome();
+      });
+
+      // Make stuff animate on load
+      chart.appear(1000, 100);
     });
   </script>
 </body>
