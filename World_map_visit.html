@@ -1,101 +1,95 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Interactive Polygon Map</title>
-  <!-- Styles -->
-  <style>
-    #chartdiv {
-      width: 100%;
-      height: 500px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Interactive Polygon Map</title>
+    <style>
+        #chartdiv {
+            width: 100%;
+            height: 500px;
+        }
+    </style>
 
-  <!-- Resources -->
-  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
-  <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
-  <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
-  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 </head>
-
 <body>
-  <div id="chartdiv"></div>
-  <script>
-    am5.ready(function() {
-      var root = am5.Root.new("chartdiv");
-      root.setThemes([am5themes_Animated.new(root)]);
-      var chart = root.container.children.push(am5map.MapChart.new(root, {
-        panX: "rotateX",
-        panY: "translateY",
-        projection: am5map.geoNaturalEarth1()
-      }));
-      var polygonSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {
-        geoJSON: am5geodata_worldLow,
-        exclude: ["AQ"]
-      }));
-      chart.chartContainer.set("background", am5.Rectangle.new(root, {
-        fill: am5.color(0x191919),
-        fillOpacity: 1.0
-      }));
-      var activeColor = am5.color("#B9CCB1");
-      var defaultColor = am5.color("#FFD6E6");
+    <div id="chartdiv"></div>
+    <script>
+        am5.ready(function() {
+            // Create root and apply themes
+            var root = am5.Root.new("chartdiv");
+            root.setThemes([am5themes_Animated.new(root)]);
 
-      polygonSeries.mapPolygons.template.setAll({
-        tooltipText: "{name}",
-        interactive: true,
-        fill: defaultColor,
-      });
-      polygonSeries.mapPolygons.template.states.create("hover", {
-        fill: am5.color("#DEB4C6")
-      });
+            // Create the map chart
+            var chart = root.container.children.push(am5map.MapChart.new(root, {
+                panX: "rotateX",
+                panY: "translateY",
+                projection: am5map.geoNaturalEarth1()
+            }));
 
-      // Function to handle when a country is clicked
-      function handleCountryClick(event) {
-        var polygon = event.target;
-        var countryId = polygon.dataItem.dataContext.id; // Use country ID from data context
-        var isActive = !(localStorage.getItem("active-country-" + countryId) === 'true'); // Correctly toggle the state
-        polygon.set("fill", isActive ? activeColor : defaultColor); // Apply the correct color based on the new state
-        localStorage.setItem("active-country-" + countryId, isActive); // Store the new state
-        console.log("Country clicked:", countryId, "isActive now set to:", isActive);
-      }
+            // Create polygon series for the map
+            var polygonSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {
+                geoJSON: am5geodata_worldLow,
+                exclude: ["AQ"]
+            }));
 
-      // Add a click event listener to handle country clicks
-      polygonSeries.mapPolygons.template.events.on("click", handleCountryClick);
+            // Set up polygon template
+            var polygonTemplate = polygonSeries.mapPolygons.template;
+            polygonTemplate.setAll({
+                tooltipText: "{name}",
+                interactive: true,
+                fill: am5.color("#FFD6E6"),
+                strokeWidth: 0.5,
+                stroke: am5.color("#ffffff")
+            });
 
-      // Retrieve the active states from localStorage and apply them
-      polygonSeries.events.on("datavalidated", function() {
-        polygonSeries.mapPolygons.each(function(polygon) {
-          var countryId = polygon.dataItem.dataContext.id;
-          var isActive = localStorage.getItem("active-country-" + countryId) === 'true';
-          polygon.set("fill", isActive ? activeColor : defaultColor); // Apply the correct color based on the stored state
-          console.log("Loaded active state for country ID", countryId, "isActive:", isActive);
+            // Define colors
+            var activeColor = am5.color("#B9CCB1");
+            var defaultColor = am5.color("#FFD6E6");
+
+            // Add event listener for click to toggle active state
+            polygonTemplate.events.on("click", function(ev) {
+                var polygon = ev.target;
+                var countryId = polygon.dataItem.dataContext.id;
+                var isActive = polygon.isActive;
+
+                // Toggle active state
+                polygon.isActive = !isActive;
+
+                // Update local storage
+                localStorage.setItem(countryId, !isActive);
+
+                // Update visual state
+                polygon.set("fill", polygon.isActive ? activeColor : defaultColor);
+            });
+
+            // On load, set the active state from local storage
+            polygonSeries.events.on("datavalidated", function() {
+                polygonSeries.mapPolygons.each(function(polygon) {
+                    var countryId = polygon.dataItem.dataContext.id;
+                    var isActive = localStorage.getItem(countryId) === "true";
+
+                    // Update active state and visual state without dispatching further events
+                    polygon.isActive = isActive;
+                    polygon.set("fill", isActive ? activeColor : defaultColor);
+                });
+            });
+
+            // Set background color for the chart
+            chart.chartContainer.set("background", am5.Rectangle.new(root, {
+                fill: am5.color(0x191919),
+                fillOpacity: 1
+            }));
+
+            // Add zoom control
+            chart.set("zoomControl", am5map.ZoomControl.new(root, {}));
+
+            // Make stuff animate on load
+            chart.appear(1000, 100);
         });
-      });
-
-      // Set clicking on "water" to zoom out
-      chart.chartContainer.get("background").events.on("click", function() {
-        chart.goHome();
-      });
-
-      // Add zoom control
-      var zoomControl = chart.set("zoomControl", am5map.ZoomControl.new(root, {}));
-      var homeButton = zoomControl.children.moveValue(am5.Button.new(root, {
-        paddingTop: 10,
-        paddingBottom: 10,
-        icon: am5.Graphics.new(root, {
-          svgPath: "M16,8 L14,8 L14,16 L10,16 L10,10 L6,10 L6,16 L2,16 L2,8 L0,8 L8,0 L16,8 Z M16,8",
-          fill: am5.color(0xffffff)
-        })
-      }), 0);
-      homeButton.events.on("click", function() {
-        chart.goHome();
-      });
-
-      // Make stuff animate on load
-      chart.appear(1000, 100);
-    });
-  </script>
+    </script>
 </body>
-
 </html>
