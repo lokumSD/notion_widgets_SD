@@ -38,64 +38,42 @@
         fill: am5.color(0x191919),
         fillOpacity: 1.0
       }));
+      var activeColor = am5.color("#B9CCB1");
+      var defaultColor = am5.color("#FFD6E6");
+
       polygonSeries.mapPolygons.template.setAll({
         tooltipText: "{name}",
-        toggleKey: "active",
         interactive: true,
-        fill: am5.color("#FFD6E6"),
+        fill: defaultColor,
       });
       polygonSeries.mapPolygons.template.states.create("hover", {
         fill: am5.color("#DEB4C6")
-      });
-      polygonSeries.mapPolygons.template.states.create("active", {
-        fill: am5.color("#B9CCB1")
       });
 
       // Function to handle when a country is clicked
       function handleCountryClick(event) {
         var polygon = event.target;
-        var countryId = polygon.dataItem.dataContext.id; // Use country ID from data context
-        var isActive = !polygon.isActive;
-        polygon.isActive = isActive;
-        // Store the active state in localStorage
-        localStorage.setItem("active-country-" + countryId, isActive);
-        console.log("Country clicked:", countryId, "isActive:", isActive); // Log the click event
+        var countryId = polygon.dataItem.dataContext.id;
+        var isActive = localStorage.getItem("active-country-" + countryId) === 'true';
+        polygon.set("fill", isActive ? defaultColor : activeColor);
+        localStorage.setItem("active-country-" + countryId, !isActive);
+        console.log("Country clicked:", countryId, "isActive:", !isActive);
       }
 
       // Add a click event listener to handle country clicks
       polygonSeries.mapPolygons.template.events.on("click", handleCountryClick);
 
-      // After all polygons are initialized, check localStorage for active states
-      polygonSeries.events.once("datavalidated", function() {
+      // Retrieve the active states from localStorage and apply them
+      polygonSeries.events.on("datavalidated", function() {
         polygonSeries.mapPolygons.each(function(polygon) {
           var countryId = polygon.dataItem.dataContext.id;
           var isActive = localStorage.getItem("active-country-" + countryId) === 'true';
-          polygon.isActive = isActive;
-          console.log("Loaded active state for country ID", countryId, "isActive:", isActive); // Log the loaded state
+          polygon.set("fill", isActive ? activeColor : defaultColor);
+          console.log("Loaded active state for country ID", countryId, "isActive:", isActive);
         });
       });
 
-      // Set clicking on "water" to zoom out
-      chart.chartContainer.get("background").events.on("click", function() {
-        chart.goHome();
-      });
-
-      // Add zoom control
-      var zoomControl = chart.set("zoomControl", am5map.ZoomControl.new(root, {}));
-      var homeButton = zoomControl.children.moveValue(am5.Button.new(root, {
-        paddingTop: 10,
-        paddingBottom: 10,
-        icon: am5.Graphics.new(root, {
-          svgPath: "M16,8 L14,8 L14,16 L10,16 L10,10 L6,10 L6,16 L2,16 L2,8 L0,8 L8,0 L16,8 Z M16,8",
-          fill: am5.color(0xffffff)
-        })
-      }), 0);
-      homeButton.events.on("click", function() {
-        chart.goHome();
-      });
-
-      // Make stuff animate on load
-      chart.appear(1000, 100);
+      // ... (the rest of your code for setting up the map)
     });
   </script>
 </body>
