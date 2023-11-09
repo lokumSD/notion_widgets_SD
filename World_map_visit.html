@@ -59,17 +59,19 @@
         polygon.isActive = isActive;
         // Store the active state in localStorage
         localStorage.setItem("active-country-" + countryId, isActive);
+        console.log("Country clicked:", countryId, "isActive:", isActive); // Log the click event
       }
 
       // Add a click event listener to handle country clicks
       polygonSeries.mapPolygons.template.events.on("click", handleCountryClick);
 
       // After all polygons are initialized, check localStorage for active states
-      polygonSeries.events.once("inited", function() {
+      polygonSeries.events.once("datavalidated", function() {
         polygonSeries.mapPolygons.each(function(polygon) {
           var countryId = polygon.dataItem.dataContext.id;
           var isActive = localStorage.getItem("active-country-" + countryId) === 'true';
           polygon.isActive = isActive;
+          console.log("Loaded active state for country ID", countryId, "isActive:", isActive); // Log the loaded state
         });
       });
 
