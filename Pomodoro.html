@@ -33,7 +33,7 @@
 
         .timer-input {
             margin-right: 40px;
-            border:4px solid #DEDEDE;
+            border: 4px solid #DEDEDE;
             border-radius: 18px;
             color: #8C8C8C;
             font-weight: bold;
@@ -46,7 +46,6 @@
             margin-right: 5px;
             font-weight: bold;
             color: #8C8C8C; 
-
         }
 
         #timer {
@@ -63,11 +62,6 @@
             margin-bottom: 75px;
         }
 
-        #controls {
-            margin-top: 20px;
-            
-        }
-
         .button-container {
             display: flex;
             flex-direction: row;
@@ -75,21 +69,19 @@
             width: 300px; /* Set a fixed width for the button container */
         }
 
-   .timer-button {
-    padding: 20px 80px;
-    font-size: 32px;
-    border: 4px solid #DEDEDE;
-    border-radius: 18px;
-    color: #F09683;
-    cursor: pointer;
-    margin: 20px;
-    min-width: 250px; /* Set a fixed width for the buttons */
-    font-weight: bold;
-    display: flex;
-    justify-content: center;
-}
-
-
+        .timer-button {
+            padding: 20px 80px;
+            font-size: 32px;
+            border: 4px solid #DEDEDE;
+            border-radius: 18px;
+            color: #F09683;
+            cursor: pointer;
+            margin: 20px;
+            min-width: 250px; /* Set a fixed width for the buttons */
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+        }
 
         input[type="text"] {
             width: 60px;
@@ -126,136 +118,99 @@
     </div>
 
     <script>
-        let interval;
-        let workMinutes = 60;
-        let workSeconds = 00;
-        let breakMinutes = 10;
-        let breakSeconds = 0;
-        let longBreakMinutes = 20;
-        let longBreakSeconds = 00;
-        let isWorkTimer = true;
-        let isRunning = false;
-        let initialWorkMinutes = 0;
-        let initialWorkSeconds = 2;
-        let shouldAutoReset = false;
-        let workSessions = 0;
-        let maxShortBreakSessions = 3;
-        let shortBreakSessions = 0;
+    let interval;
+    let isWorkTimer = true;
+    let isRunning = false;
+    let workSessions = 0;
+    let maxShortBreakSessions = 3;
+    let shortBreakSessions = 0;
+    let remainingTime = 0;
 
-        function startOrPauseTimer() {
-            if (!isRunning) {
-                isRunning = true;
-                document.getElementById("startButton").textContent = "Pause";
-                document.getElementById("resetButton").style.display = "none";
-                interval = setInterval(updateTimer, 1000);
-            } else {
-                isRunning = false;
-                document.getElementById("startButton").textContent = "Resume";
-                document.getElementById("resetButton").style.display = "inline";
-                clearInterval(interval);
-            }
-        }
+    function getDurationInSeconds(elementId) {
+        const timeParts = document.getElementById(elementId).value.split(":");
+        const minutes = parseInt(timeParts[0]) || 0;
+        const seconds = parseInt(timeParts[1]) || 0;
+        return (minutes * 60) + seconds;
+    }
 
-        function resetTimer() {
+    function startOrPauseTimer() {
+        if (!isRunning) {
+            isRunning = true;
+            remainingTime = getDurationInSeconds(isWorkTimer ? 'workDuration' : 'breakDuration');
+            document.getElementById("startButton").textContent = "Pause";
+            document.getElementById("resetButton").style.display = "none";
+            interval = setInterval(updateTimer, 1000);
+        } else {
             isRunning = false;
-            document.getElementById("startButton").textContent = "Start";
+            document.getElementById("startButton").textContent = "Resume";
             document.getElementById("resetButton").style.display = "inline";
             clearInterval(interval);
+        }
+    }
 
-            const workDurationInput = document.getElementById("workDuration").value.split(":");
-            const breakDurationInput = document.getElementById("breakDuration").value.split(":");
-            const longBreakDurationInput = document.getElementById("longBreakDuration").value.split(":");
+    function resetTimer() {
+        isRunning = false;
+        document.getElementById("startButton").textContent = "Start";
+        document.getElementById("resetButton").style.display = "inline";
+        clearInterval(interval);
+        isWorkTimer = true;
+        workSessions = 0;
+        shortBreakSessions = 0;
+        document.getElementById("phase").textContent = "Work";
+        remainingTime = getDurationInSeconds('workDuration');
+        document.getElementById("timer").textContent = formatTime(remainingTime);
+        updateBackgroundColor('#FFD3DA');
+    }
 
-            initialWorkMinutes = workMinutes = parseInt(workDurationInput[0]) || 0;
-            initialWorkSeconds = workSeconds = parseInt(workDurationInput[1]) || 0;
+    function updateTimer() {
+        remainingTime -= 1;
 
-            breakMinutes = parseInt(breakDurationInput[0]) || 0;
-            breakSeconds = parseInt(breakDurationInput[1]) || 0;
+        if (remainingTime < 0) {
+            completePhase();
+        } else {
+            document.getElementById("timer").textContent = formatTime(remainingTime);
+        }
+    }
 
-            longBreakMinutes = parseInt(longBreakDurationInput[0]) || 0;
-            longBreakSeconds = parseInt(longBreakDurationInput[1]) || 0;
-
-            isWorkTimer = true;
+    function completePhase() {
+        playTimerAudio();
+        if (isWorkTimer) {
+            workSessions++;
+            shortBreakSessions++;
+            if (shortBreakSessions >= maxShortBreakSessions) {
+                shortBreakSessions = 0;
+                document.getElementById("phase").textContent = "Long Break";
+                remainingTime = getDurationInSeconds('longBreakDuration');
+                updateBackgroundColor('#BFEDBE');
+            } else {
+                document.getElementById("phase").textContent = "Break";
+                remainingTime = getDurationInSeconds('breakDuration');
+                updateBackgroundColor('#97C3D4');
+            }
+        } else {
             document.getElementById("phase").textContent = "Work";
-            updateDisplay();
+            remainingTime = getDurationInSeconds('workDuration');
             updateBackgroundColor('#FFD3DA');
         }
+        isWorkTimer = !isWorkTimer;
+        document.getElementById("timer").textContent = formatTime(remainingTime);
+    }
 
-        function updateTimer() {
-            if (isWorkTimer) {
-                if (workMinutes === 0 && workSeconds === 0) {
-                    workSessions++;
-                    shortBreakSessions++;
-                    if (shortBreakSessions === maxShortBreakSessions) {
-                        breakMinutes = longBreakMinutes;
-                        breakSeconds = longBreakSeconds;
-                        shortBreakSessions = 0;
-                        document.getElementById("phase").textContent = "Long Break";
-                        updateBackgroundColor('#BFEDBE'); // Background color for long break
-                    } else {
-                        breakMinutes = parseInt(document.getElementById("breakDuration").value.split(":")[0]) || 0;
-                        breakSeconds = parseInt(document.getElementById("breakDuration").value.split(":")[1]) || 0;
-                        document.getElementById("phase").textContent = "Break";
-                        updateBackgroundColor('#97C3D4'); // Background color for short break
-                    }
-                    isWorkTimer = false;
-                    shouldAutoReset = true;
-                    playTimerAudio(); // Play audio when the timer is up
-                } else if (workSeconds === 0) {
-                    if (workMinutes === 0) {
-                        workMinutes = 0;
-                        workSeconds = 0;
-                    } else {
-                        workMinutes--;
-                        workSeconds = 59;
-                    }
-                } else {
-                    workSeconds--;
-                }
-            } else {
-                if (breakMinutes === 0 && breakSeconds === 0) {
-                    isWorkTimer = true;
-                    document.getElementById("phase").textContent = "Work";
-                    workMinutes = initialWorkMinutes;
-                    workSeconds = initialWorkSeconds;
-                    if (shouldAutoReset) {
-                        resetTimer();
-                        shouldAutoReset = false;
-                    }
-                    updateBackgroundColor('#FFD3DA'); // Background color for work
-                    playTimerAudio(); // Play audio when the timer is up
-                } else if (breakSeconds === 0) {
-                    if (breakMinutes === 0) {
-                        breakMinutes = 0;
-                        breakSeconds = 0;
-                    } else {
-                        breakMinutes--;
-                        breakSeconds = 59;
-                    }
-                } else {
-                    breakSeconds--;
-                }
-            }
-            updateDisplay();
-        }
+    function formatTime(seconds) {
+        let minutes = Math.floor(seconds / 60);
+        let remainingSeconds = seconds % 60;
+        return `${minutes < 10 ? '0' : ''}${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    }
 
-        function updateDisplay() {
-            const timerDisplay = document.getElementById("timer");
-            if (isWorkTimer) {
-                timerDisplay.textContent = `${workMinutes < 10 ? '0' : ''}${workMinutes}:${workSeconds < 10 ? '0' : ''}${workSeconds}`;
-            } else {
-                timerDisplay.textContent = `${breakMinutes < 10 ? '0' : ''}${breakMinutes}:${breakSeconds < 10 ? '0' : ''}${breakSeconds}`;
-            }
-        }
+    function updateBackgroundColor(color) {
+        document.getElementById("timerContainer").style.backgroundColor = color;
+    }
 
-        function updateBackgroundColor(color) {
-            document.getElementById("timerContainer").style.backgroundColor = color;
-        }
+    function playTimerAudio() {
+        const timerAudio = document.getElementById("timerAudio");
+        timerAudio.play();
+    }
+</script>
 
-        function playTimerAudio() {
-            const timerAudio = document.getElementById("timerAudio");
-            timerAudio.play();
-        }
-    </script>
 </body>
 </html>
